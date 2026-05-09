@@ -5,3 +5,4 @@ dist
 coverage
 @nestjs/core
 unrs-resolver
+.env
