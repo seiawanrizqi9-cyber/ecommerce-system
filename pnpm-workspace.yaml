@@ -3,5 +3,5 @@ packages:
   - packages/*
 allowBuilds:
   '@nestjs/core': true
-  bcrypt: set this to true or false
+  bcrypt: true
   unrs-resolver: true
