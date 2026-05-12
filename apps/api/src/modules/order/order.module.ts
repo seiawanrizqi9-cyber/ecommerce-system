@@ -4,6 +4,8 @@ import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 import { Order, OrderSchema } from './schemas/order.schema';
 import { ProductModule } from '../products/products.module';
+import { BullModule } from '@nestjs/bullmq';
+import { QUEUES } from '@app/shared';
 
 @Module({
   imports: [
@@ -15,6 +17,10 @@ import { ProductModule } from '../products/products.module';
     ]),
 
     ProductModule,
+
+    BullModule.registerQueue({
+      name: QUEUES.ORDER,
+    }),
   ],
   controllers: [OrderController],
   providers: [OrderService],
