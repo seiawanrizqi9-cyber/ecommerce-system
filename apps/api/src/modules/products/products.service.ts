@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import slugify from 'slugify';
 import { Product, ProductDocument } from './schemas/product.schema';
 import { QueryProductDto } from './dto/query-product.dto';
+import { CreateProductDto } from './dto/create-product.dto';
 
 @Injectable()
 export class ProductsService {
@@ -42,5 +44,28 @@ export class ProductsService {
         totalPages: Math.ceil(total / limit),
       },
     };
+  }
+
+  async create(createProductDto: CreateProductDto) {
+    const slug = slugify(createProductDto.name, {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+
+    const existingProduct = await this.productModel.findOne({
+      slug,
+    });
+
+    if (existingProduct) {
+      throw new ConflictException('Product slug already exists');
+    }
+
+    const product = await this.productModel.create({
+      ...createProductDto,
+      slug,
+    });
+
+    return product;
   }
 }
