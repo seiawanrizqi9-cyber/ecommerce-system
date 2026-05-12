@@ -6,6 +6,8 @@ import { OrderService } from './order.service';
 
 import { Order, OrderSchema } from './schemas/order.schema';
 
+import { ProductModule } from '../products/products.module';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -14,6 +16,8 @@ import { Order, OrderSchema } from './schemas/order.schema';
         schema: OrderSchema,
       },
     ]),
+
+    ProductModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],
