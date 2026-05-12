@@ -3,21 +3,27 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiForbiddenResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Role } from '../auth/enums/role.enum';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RequestUser } from '../../common/interfaces/request-user.interface';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { RequestUser } from '../../common/interfaces/request-user.interface';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 
 @ApiTags('Orders')
 @ApiBearerAuth()
@@ -79,5 +85,29 @@ export class OrderController {
     @Param('id') orderId: string,
   ) {
     return this.orderService.getOrderDetail(req.user.id, orderId);
+  }
+
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Update order status',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Order status updated',
+  })
+  @ApiForbiddenResponse({
+    description: 'Forbidden',
+  })
+  async updateOrderStatus(
+    @Param('id') orderId: string,
+    @Body()
+    updateOrderStatusDto: UpdateOrderStatusDto,
+  ) {
+    return this.orderService.updateOrderStatus(
+      orderId,
+      updateOrderStatusDto.status,
+    );
   }
 }
