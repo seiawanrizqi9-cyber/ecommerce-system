@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -71,5 +72,27 @@ export class OrderService {
 
       return order;
     }
+  }
+
+  async getMyOrders(userId: string) {
+    return this.orderModel
+      .find({
+        user: new Types.ObjectId(userId),
+      })
+      .sort({ createdAt: -1 });
+  }
+
+  async getOrderDetail(userId: string, orderId: string) {
+    const order = await this.orderModel.findById(orderId);
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.user.toString() !== userId) {
+      throw new ForbiddenException('You cannot access this order');
+    }
+
+    return order;
   }
 }
