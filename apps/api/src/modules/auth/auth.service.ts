@@ -40,7 +40,7 @@ export class AuthService {
     const tokens = await this.generateTokens({
       sub: user.id,
       email: user.email,
-      role: user.role,
+      role: user.role as Role,
     });
 
     return {
@@ -72,7 +72,7 @@ export class AuthService {
     const tokens = await this.generateTokens({
       sub: user.id,
       email: user.email,
-      role: user.role,
+      role: user.role as Role,
     });
 
     return {

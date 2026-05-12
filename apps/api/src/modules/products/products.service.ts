@@ -7,7 +7,6 @@ import {
 import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import slugify from 'slugify';
-
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
 import { Product, ProductDocument } from './schemas/product.schema';
