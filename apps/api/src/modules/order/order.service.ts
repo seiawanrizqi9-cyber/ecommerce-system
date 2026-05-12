@@ -9,6 +9,7 @@ import { Model, Types } from 'mongoose';
 import { Order, OrderDocument } from './schemas/order.schema';
 import { Product, ProductDocument } from '../products/schemas/product.schema';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { OrderStatus } from './enums/order-status.enum';
 
 @Injectable()
 export class OrderService {
@@ -92,6 +93,20 @@ export class OrderService {
     if (order.user.toString() !== userId) {
       throw new ForbiddenException('You cannot access this order');
     }
+
+    return order;
+  }
+
+  async updateOrderStatus(orderId: string, status: OrderStatus) {
+    const order = await this.orderModel.findById(orderId);
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    order.status = status;
+
+    await order.save();
 
     return order;
   }
