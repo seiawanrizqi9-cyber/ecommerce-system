@@ -5,6 +5,9 @@ import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthUser } from './interfaces/auth-user.interface';
+import { Roles } from './decorators/roles.decorator';
+import { Role } from './enums/role.enum';
+import { RolesGuard } from './guards/roles.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -26,6 +29,15 @@ export class AuthController {
     return {
       message: 'Profile fetched successfully',
       user,
+    };
+  }
+
+  @Get('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  adminOnly() {
+    return {
+      message: 'Welcome Admin 😎',
     };
   }
 }
