@@ -20,5 +20,9 @@
   },
   "devDependencies": {
     "turbo": "^2.9.9"
+  },
+  "dependencies": {
+    "bullmq": "^5.76.7",
+    "ioredis": "^5.10.1"
   }
 }
