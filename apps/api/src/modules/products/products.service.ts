@@ -1,10 +1,16 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import mongoose, { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import slugify from 'slugify';
-import { Product, ProductDocument } from './schemas/product.schema';
-import { QueryProductDto } from './dto/query-product.dto';
+
 import { CreateProductDto } from './dto/create-product.dto';
+import { QueryProductDto } from './dto/query-product.dto';
+import { Product, ProductDocument } from './schemas/product.schema';
 
 @Injectable()
 export class ProductsService {
@@ -65,6 +71,20 @@ export class ProductsService {
       ...createProductDto,
       slug,
     });
+
+    return product;
+  }
+
+  async findOne(id: string) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid product id');
+    }
+
+    const product = await this.productModel.findById(id);
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
 
     return product;
   }
