@@ -4,24 +4,29 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { Role } from './enums/role.enum';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
+
     private readonly jwtService: JwtService,
+
+    private readonly configService: ConfigService,
   ) {}
 
   async register(dto: RegisterDto) {
     const existingUser = await this.usersService.findByEmail(dto.email);
 
     if (existingUser) {
-      throw new BadRequestException('Email already exists');
+      throw new BadRequestException('Email already registered');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
@@ -29,14 +34,25 @@ export class AuthService {
     const user = await this.usersService.create({
       email: dto.email,
       password: hashedPassword,
+      role: Role.CUSTOMER,
+    });
+
+    const tokens = await this.generateTokens({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
     });
 
     return {
       message: 'Register success',
+
       user: {
         id: user.id,
         email: user.email,
+        role: user.role,
       },
+
+      ...tokens,
     };
   }
 
@@ -53,21 +69,66 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = {
+    const tokens = await this.generateTokens({
       sub: user.id,
       email: user.email,
-      role: Role.CUSTOMER,
-    };
-
-    const accessToken = await this.jwtService.signAsync(payload);
+      role: user.role,
+    });
 
     return {
-      accessToken,
+      message: 'Login success',
+
       user: {
         id: user.id,
         email: user.email,
-        role: Role.CUSTOMER,
+        role: user.role,
       },
+
+      ...tokens,
+    };
+  }
+
+  async refreshToken(refreshToken: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(
+        refreshToken,
+        {
+          secret:
+            this.configService.get<string>('JWT_REFRESH_SECRET') ??
+            'super-refresh-secret',
+        },
+      );
+
+      return this.generateTokens({
+        sub: payload.sub,
+        email: payload.email,
+        role: payload.role,
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
+
+  private async generateTokens(payload: JwtPayload) {
+    const accessToken = await this.jwtService.signAsync(payload, {
+      secret:
+        this.configService.get<string>('JWT_ACCESS_SECRET') ??
+        'super-secret-access',
+
+      expiresIn: '15m',
+    });
+
+    const refreshToken = await this.jwtService.signAsync(payload, {
+      secret:
+        this.configService.get<string>('JWT_REFRESH_SECRET') ??
+        'super-refresh-secret',
+
+      expiresIn: '7d',
+    });
+
+    return {
+      accessToken,
+      refreshToken,
     };
   }
 }
