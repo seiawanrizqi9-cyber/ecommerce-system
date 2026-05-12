@@ -7,21 +7,16 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiTags,
   ApiProperty,
 } from '@nestjs/swagger';
-
 import { ProductsService } from './products.service';
-
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
-
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 import { Roles } from './decorators/roles.decorator';
 import { RolesGuard } from './decorators/roles.guard';
 
