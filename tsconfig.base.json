@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@app/shared": ["packages/shared/src/index.ts"],
+      "@app/shared/*": ["packages/shared/src/*"],
+      "@app/config": ["packages/config/src/index.ts"],
+      "@app/config/*": ["packages/config/src/*"],
+      "@app/database": ["packages/database/src/index.ts"],
+      "@app/database/*": ["packages/database/src/*"]
+    }
+  }
+}
