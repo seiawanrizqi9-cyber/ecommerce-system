@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
-import { Order, OrderSchema } from './schemas/order.schema';
+import { Order, OrderSchema } from '@app/shared';
 import { ProductModule } from '../products/products.module';
 import { BullModule } from '@nestjs/bullmq';
 import { QUEUES } from '@app/shared';

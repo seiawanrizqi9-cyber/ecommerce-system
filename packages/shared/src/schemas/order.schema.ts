@@ -1,6 +1,6 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
-import { OrderStatus } from '../enums/order-status.enum';
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { HydratedDocument, Types } from "mongoose";
+import { OrderStatus } from "../enums/order-status.enum";
 
 export type OrderDocument = HydratedDocument<Order>;
 
@@ -30,7 +30,7 @@ const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
 export class Order {
   @Prop({
     type: Types.ObjectId,
-    ref: 'User',
+    ref: "User",
     required: true,
   })
   user: Types.ObjectId;
