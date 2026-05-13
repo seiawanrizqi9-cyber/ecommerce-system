@@ -2,12 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { Order, OrderDocument } from './schemas/order.schema';
+import { Order, OrderDocument, OrderStatus } from '@app/shared';
 import { Product, ProductDocument } from '../products/schemas/product.schema';
-
 import { OrderQueueService } from './order-queue.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { OrderStatus } from './enums/order-status.enum';
 
 @Injectable()
 export class OrderService {
@@ -64,7 +62,15 @@ export class OrderService {
     return this.orderModel.find({ user: userId }).sort({ createdAt: -1 });
   }
 
-  async getOrderDetail(orderId: string) {
-    return this.orderModel.findById(orderId);
+  async getOrderDetail(userId: string, orderId: string) {
+    return this.orderModel.findOne({ _id: orderId, user: userId });
+  }
+
+  async updateOrderStatus(orderId: string, status: OrderStatus) {
+    return this.orderModel.findByIdAndUpdate(
+      orderId,
+      { status },
+      { new: true },
+    );
   }
 }

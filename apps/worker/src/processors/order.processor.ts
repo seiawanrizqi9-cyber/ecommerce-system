@@ -1,13 +1,26 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { CreateOrderJobData } from '../jobs/order.job.types';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+
+import { Order, OrderDocument } from '@app/shared';
+import { OrderStatus } from '@app/shared';
+
+interface CreateOrderJobData {
+  orderId: string;
+  userId: string;
+}
 
 @Processor('order-queue')
 export class OrderProcessor extends WorkerHost {
-  async process(job: Job<CreateOrderJobData>): Promise<any> {
-    console.log('🔥 Worker received job:', job.name);
-    console.log('📦 Data:', job.data);
+  constructor(
+    @InjectModel(Order.name)
+    private readonly orderModel: Model<OrderDocument>,
+  ) {
+    super();
+  }
 
+  async process(job: Job<CreateOrderJobData>) {
     switch (job.name) {
       case 'create-order':
         return this.handleCreateOrder(job.data);
@@ -15,15 +28,26 @@ export class OrderProcessor extends WorkerHost {
   }
 
   private async handleCreateOrder(data: CreateOrderJobData) {
-    const { orderId, userId } = data;
+    const { orderId } = data;
 
-    console.log('🛠 Processing order...');
-    console.log('Order ID:', orderId);
-    console.log('User ID:', userId);
+    console.log('🟡 Worker started order:', orderId);
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // 🔄 step 1: processing
+    await this.orderModel.findByIdAndUpdate(orderId, {
+      status: OrderStatus.PROCESSING,
+    });
 
-    console.log('✅ Order processed successfully');
+    console.log('🟠 Order set to PROCESSING');
+
+    // simulate heavy work
+    await new Promise((r) => setTimeout(r, 1500));
+
+    // ✅ step 2: completed
+    await this.orderModel.findByIdAndUpdate(orderId, {
+      status: OrderStatus.COMPLETED,
+    });
+
+    console.log('🟢 Order COMPLETED');
 
     return {
       success: true,
