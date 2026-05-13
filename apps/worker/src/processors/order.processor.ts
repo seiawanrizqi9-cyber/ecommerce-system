@@ -3,8 +3,7 @@ import { Job } from 'bullmq';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { Order, OrderDocument } from '@app/shared';
-import { OrderStatus } from '@app/shared';
+import { Order, OrderDocument, OrderStatus } from '@app/shared';
 
 interface CreateOrderJobData {
   orderId: string;
@@ -21,9 +20,20 @@ export class OrderProcessor extends WorkerHost {
   }
 
   async process(job: Job<CreateOrderJobData>) {
-    switch (job.name) {
-      case 'create-order':
-        return this.handleCreateOrder(job.data);
+    try {
+      switch (job.name) {
+        case 'create-order':
+          return await this.handleCreateOrder(job.data);
+      }
+    } catch (error) {
+      console.error('❌ Worker error:', error);
+
+      // ❗ mark order as FAILED kalau error di level global
+      await this.orderModel.findByIdAndUpdate(job.data.orderId, {
+        status: OrderStatus.FAILED,
+      });
+
+      throw error; // penting supaya BullMQ tetap tahu job gagal
     }
   }
 
@@ -32,26 +42,43 @@ export class OrderProcessor extends WorkerHost {
 
     console.log('🟡 Worker started order:', orderId);
 
-    // 🔄 step 1: processing
-    await this.orderModel.findByIdAndUpdate(orderId, {
-      status: OrderStatus.PROCESSING,
-    });
+    try {
+      // 🔄 STEP 1: set PROCESSING
+      await this.orderModel.findByIdAndUpdate(orderId, {
+        status: OrderStatus.PROCESSING,
+      });
 
-    console.log('🟠 Order set to PROCESSING');
+      console.log('🟠 Order set to PROCESSING');
 
-    // simulate heavy work
-    await new Promise((r) => setTimeout(r, 1500));
+      // simulate heavy process
+      await new Promise((r) => setTimeout(r, 1500));
 
-    // ✅ step 2: completed
-    await this.orderModel.findByIdAndUpdate(orderId, {
-      status: OrderStatus.COMPLETED,
-    });
+      // 🧠 contoh potensi error (misalnya validasi internal)
+      const randomFail = Math.random() < 0.1;
+      if (randomFail) {
+        throw new Error('Simulasi failure di worker');
+      }
 
-    console.log('🟢 Order COMPLETED');
+      // ✅ STEP 2: COMPLETED
+      await this.orderModel.findByIdAndUpdate(orderId, {
+        status: OrderStatus.COMPLETED,
+      });
 
-    return {
-      success: true,
-      orderId,
-    };
+      console.log('🟢 Order COMPLETED');
+
+      return {
+        success: true,
+        orderId,
+      };
+    } catch (error) {
+      console.error('❌ Failed processing order:', orderId, error);
+
+      // ❗ update status FAILED
+      await this.orderModel.findByIdAndUpdate(orderId, {
+        status: OrderStatus.FAILED,
+      });
+
+      throw error; // tetap lempar ke BullMQ
+    }
   }
 }
