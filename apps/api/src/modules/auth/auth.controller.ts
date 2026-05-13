@@ -8,7 +8,12 @@ import { AuthUser } from './interfaces/auth-user.interface';
 import { Roles } from './decorators/roles.decorator';
 import { Role } from './enums/role.enum';
 import { RolesGuard } from './guards/roles.guard';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -16,17 +21,37 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @ApiOperation({ summary: 'Register user baru' })
+  @ApiResponse({
+    status: 201,
+    description: 'User berhasil dibuat',
+  })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Post('login')
+  @ApiOperation({ summary: 'Login user dan mendapatkan JWT token' })
+  @ApiResponse({
+    status: 200,
+    description: 'Login berhasil',
+    schema: {
+      example: {
+        access_token: 'jwt.token.here',
+      },
+    },
+  })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
 
   @Get('profile')
-  @ApiBearerAuth()
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get profile user login' })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile user',
+  })
   @UseGuards(JwtAuthGuard)
   getProfile(@CurrentUser() user: AuthUser) {
     return {
@@ -36,7 +61,12 @@ export class AuthController {
   }
 
   @Get('admin')
-  @ApiBearerAuth()
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Admin only endpoint' })
+  @ApiResponse({
+    status: 200,
+    description: 'Welcome admin',
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   adminOnly() {
