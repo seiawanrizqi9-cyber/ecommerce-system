@@ -1,13 +1,11 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
+
 import { Order, OrderDocument } from './schemas/order.schema';
 import { Product, ProductDocument } from '../products/schemas/product.schema';
+
+import { OrderQueueService } from './order-queue.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatus } from './enums/order-status.enum';
 
@@ -19,95 +17,54 @@ export class OrderService {
 
     @InjectModel(Product.name)
     private readonly productModel: Model<ProductDocument>,
+
+    private readonly orderQueueService: OrderQueueService,
   ) {}
 
-  async createOrder(userId: string, createOrderDto: CreateOrderDto) {
-    const orderItems: {
-      productId: string;
-      productName: string;
-      price: number;
-      quantity: number;
-      subtotal: number;
-    }[] = [];
+  async createOrder(userId: string, dto: CreateOrderDto) {
+    // 1. Ambil semua product yang dibutuhkan
+    const productIds = dto.items.map((item) => item.productId);
 
-    let totalPrice = 0;
+    const products = await this.productModel
+      .find({ _id: { $in: productIds } })
+      .lean(); // 🔥 biar ringan + avoid mongoose weird typing
 
-    for (const item of createOrderDto.items) {
-      {
-        const product = await this.productModel.findById(item.productId);
+    // 2. Hitung total harga dari DB (AMAN & REALISTIC)
+    const totalPrice = dto.items.reduce((sum, item) => {
+      const product = products.find((p) => p._id.toString() === item.productId);
 
-        if (!product) {
-          throw new NotFoundException(
-            `Product with ID ${item.productId} not found`,
-          );
-        }
+      if (!product) return sum;
 
-        if (product.stock < item.quantity) {
-          throw new BadRequestException(
-            `Insufficient stock for ${product.name}`,
-          );
-        }
+      return sum + product.price * item.quantity;
+    }, 0);
 
-        const subtotal = product.price * item.quantity;
+    // 3. Simpan order ke DB
+    const order = await this.orderModel.create({
+      user: userId,
+      items: dto.items,
+      totalPrice,
+      status: OrderStatus.PENDING,
+    });
 
-        orderItems.push({
-          productId: product._id.toString(),
-          productName: product.name,
-          price: product.price,
-          quantity: item.quantity,
-          subtotal,
-        });
+    // 4. Kirim ke queue (async processing)
+    await this.orderQueueService.addCreateOrderJob({
+      orderId: order._id.toString(),
+      userId,
+    });
 
-        totalPrice += subtotal;
-
-        product.stock -= item.quantity;
-
-        await product.save();
-      }
-
-      const order = await this.orderModel.create({
-        user: new Types.ObjectId(userId),
-        items: orderItems,
-        totalPrice,
-      });
-
-      return order;
-    }
+    // 5. Response cepat ke user
+    return {
+      message: 'Order created successfully',
+      orderId: order._id,
+      status: order.status,
+    };
   }
 
   async getMyOrders(userId: string) {
-    return this.orderModel
-      .find({
-        user: new Types.ObjectId(userId),
-      })
-      .sort({ createdAt: -1 });
+    return this.orderModel.find({ user: userId }).sort({ createdAt: -1 });
   }
 
-  async getOrderDetail(userId: string, orderId: string) {
-    const order = await this.orderModel.findById(orderId);
-
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
-
-    if (order.user.toString() !== userId) {
-      throw new ForbiddenException('You cannot access this order');
-    }
-
-    return order;
-  }
-
-  async updateOrderStatus(orderId: string, status: OrderStatus) {
-    const order = await this.orderModel.findById(orderId);
-
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
-
-    order.status = status;
-
-    await order.save();
-
-    return order;
+  async getOrderDetail(orderId: string) {
+    return this.orderModel.findById(orderId);
   }
 }

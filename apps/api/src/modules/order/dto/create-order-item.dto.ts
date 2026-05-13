@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsMongoId, IsNotEmpty, IsNumber, Min } from 'class-validator';
+import {
+  IsMongoId,
+  IsNotEmpty,
+  IsNumber,
+  IsPositive,
+  Min,
+} from 'class-validator';
 
 export class CreateOrderItemDto {
   @ApiProperty({
@@ -13,6 +19,7 @@ export class CreateOrderItemDto {
     example: 2,
   })
   @IsNumber()
+  @IsPositive()
   @Min(1)
   quantity: number;
 }
