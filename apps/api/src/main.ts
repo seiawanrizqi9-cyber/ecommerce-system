@@ -1,6 +1,6 @@
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
 
@@ -9,6 +9,7 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
+  const logger = new Logger('Bootstrap');
 
   // Global Prefix
   app.setGlobalPrefix('api');
@@ -40,7 +41,12 @@ async function bootstrap(): Promise<void> {
 
   SwaggerModule.setup('docs', app, documentFactory);
 
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT ?? 3000;
+
+  await app.listen(port);
+
+  logger.log(`🚀 API running on port ${port}`);
+  logger.log(`📚 Swagger docs: http://localhost:${port}/docs`);
 }
 
 void bootstrap();
