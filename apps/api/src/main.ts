@@ -1,42 +1,46 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
-async function bootstrap() {
+import { AppModule } from './app.module';
+
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+
+async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
-  // 🔥 Global prefix (kalau kamu pakai ini sebelumnya)
+  // Global Prefix
   app.setGlobalPrefix('api');
 
-  // 🔐 Validation global
+  // Validation Pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
+      forbidNonWhitelisted: true,
       transform: true,
     }),
   );
 
-  // 📚 Swagger config
+  // Global Exception Filter
+  app.useGlobalFilters(new HttpExceptionFilter());
+
+  // Global Response Interceptor
+  app.useGlobalInterceptors(new ResponseInterceptor());
+
+  // Swagger Config
   const config = new DocumentBuilder()
     .setTitle('E-Commerce API')
-    .setDescription('API documentation for E-Commerce Monorepo')
+    .setDescription('E-Commerce Monorepo API Documentation')
     .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-      },
-      'access-token',
-    )
+    .addBearerAuth()
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
 
-  // 🌐 Swagger endpoint
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('docs', app, documentFactory);
 
-  await app.listen(3000);
+  await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+
+void bootstrap();
