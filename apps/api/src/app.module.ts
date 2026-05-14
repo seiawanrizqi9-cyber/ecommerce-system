@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { OrderModule } from './modules/order/order.module';
 import { BullModule } from '@nestjs/bullmq';
+import { ThrottlerModule } from '@nestjs/throttler';
 import * as Joi from 'joi';
 
 @Module({
@@ -20,6 +21,13 @@ import * as Joi from 'joi';
         REDIS_PORT: Joi.number().required(),
       }),
     }),
+
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
 
     MongooseModule.forRootAsync({
       inject: [ConfigService],
