@@ -7,53 +7,84 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiResponse,
   ApiTags,
-  ApiProperty,
 } from '@nestjs/swagger';
+
 import { ProductsService } from './products.service';
+
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
+
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { Roles } from './decorators/roles.decorator';
-import { RolesGuard } from './decorators/roles.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Role } from '../auth/enums/role.enum';
 
 @ApiTags('Products')
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
-  @ApiBearerAuth()
+  // 🔥 CREATE PRODUCT
+  @Post()
+  @ApiBearerAuth('access-token')
   @ApiOperation({
     summary: 'Create new product',
+    description: 'Endpoint untuk membuat produk baru (Admin only)',
   })
-  @Post()
+  @ApiResponse({
+    status: 201,
+    description: 'Produk berhasil dibuat',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin only',
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @Roles(Role.ADMIN)
   create(@Body() createProductDto: CreateProductDto) {
     return this.productsService.create(createProductDto);
   }
 
+  // 🔥 GET ALL PRODUCTS
+  @Get()
   @ApiOperation({
     summary: 'Get all products',
+    description: 'Mengambil semua produk dengan pagination & search',
   })
-  @Get()
+  @ApiResponse({
+    status: 200,
+    description: 'List produk berhasil diambil',
+  })
   findAll(@Query() query: QueryProductDto) {
     return this.productsService.findAll(query);
   }
 
+  // 🔥 GET PRODUCT DETAIL
+  @Get(':id')
   @ApiOperation({
     summary: 'Get product by id',
+    description: 'Mengambil detail produk berdasarkan ID',
   })
-  @Get(':id')
+  @ApiResponse({
+    status: 200,
+    description: 'Detail produk berhasil diambil',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Produk tidak ditemukan',
+  })
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
   }
-
-  @ApiProperty({
-    example: 'Gaming Mouse RGB',
-  })
-  name: string;
 }
