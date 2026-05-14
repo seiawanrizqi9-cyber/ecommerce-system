@@ -8,6 +8,7 @@ import { AppModule } from './app.module';
 
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+const logger = new Logger('Bootstrap');
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
@@ -15,7 +16,7 @@ async function bootstrap(): Promise<void> {
   });
   app.use(helmet());
   app.use(compression());
-  const logger = new Logger('Bootstrap');
+  app.enableShutdownHooks();
 
   // Global Prefix
   app.setGlobalPrefix('api');
