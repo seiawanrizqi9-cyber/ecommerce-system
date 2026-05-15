@@ -5,7 +5,7 @@ import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthUser } from './interfaces/auth-user.interface';
-import { Roles } from './decorators/roles.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from './enums/role.enum';
 import { RolesGuard } from './guards/roles.guard';
 import {
@@ -46,7 +46,7 @@ export class AuthController {
   }
 
   @Get('profile')
-  @ApiBearerAuth('access-token')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get profile user login' })
   @ApiResponse({
     status: 200,
@@ -61,7 +61,7 @@ export class AuthController {
   }
 
   @Get('admin')
-  @ApiBearerAuth('access-token')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Admin only endpoint' })
   @ApiResponse({
     status: 200,

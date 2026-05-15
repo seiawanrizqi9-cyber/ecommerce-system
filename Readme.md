@@ -1,0 +1,2 @@
+ubah customer jadi admin:
+node -e "const mongoose = require('mongoose'); mongoose.connect('mongodb://localhost:27017/ecommerce-system').then(async () => { const result = await mongoose.connection.collection('users').updateOne({ email: 'sherlock@gmail.com' }, { $set: { role: 'admin' } }); console.log(result.modifiedCount > 0 ? '✅ Role updated to Admin!' : '⚠️ User already Admin or not found'); process.exit(); })"

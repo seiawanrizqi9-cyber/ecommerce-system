@@ -1,20 +1,3 @@
 {
-  "compilerOptions": {
-    "baseUrl": ".",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "target": "ES2023",
-    "lib": ["ES2023"],
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "paths": {
-      "@app/shared": ["packages/shared/src/index.ts"],
-      "@app/shared/*": ["packages/shared/src/*"],
-      "@app/config": ["packages/config/src/index.ts"],
-      "@app/config/*": ["packages/config/src/*"],
-      "@app/database": ["packages/database/src/index.ts"],
-      "@app/database/*": ["packages/database/src/*"]
-    }
-  }
+  "extends": "./packages/shared/tsconfig.json"
 }

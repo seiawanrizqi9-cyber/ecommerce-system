@@ -23,7 +23,7 @@ import { QueryProductDto } from './dto/query-product.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 
-import { Roles } from '../auth/decorators/roles.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../auth/enums/role.enum';
 
 @ApiTags('Products')
@@ -33,7 +33,7 @@ export class ProductsController {
 
   // 🔥 CREATE PRODUCT
   @Post()
-  @ApiBearerAuth('access-token')
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Create new product',
     description: 'Endpoint untuk membuat produk baru (Admin only)',
