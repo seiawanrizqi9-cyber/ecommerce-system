@@ -36,10 +36,27 @@ export class OrderService {
       return sum + product.price * item.quantity;
     }, 0);
 
-    // 3. Simpan order ke DB
+    // 3. Siapkan items dengan detail produk
+    const orderItems = dto.items.map((item) => {
+      const product = products.find((p) => p._id.toString() === item.productId);
+
+      if (!product) {
+        throw new Error(`Product not found: ${item.productId}`);
+      }
+
+      return {
+        productId: item.productId,
+        productName: product.name,
+        price: product.price,
+        quantity: item.quantity,
+        subtotal: product.price * item.quantity,
+      };
+    });
+
+    // 4. Simpan order ke DB
     const order = await this.orderModel.create({
       user: userId,
-      items: dto.items,
+      items: orderItems,
       totalPrice,
       status: OrderStatus.PENDING,
     });

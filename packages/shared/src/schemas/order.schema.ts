@@ -7,19 +7,19 @@ export type OrderDocument = HydratedDocument<Order>;
 @Schema({ _id: false })
 export class OrderItem {
   @Prop({ required: true })
-  productId: string;
+  productId!: string;
 
   @Prop({ required: true })
-  productName: string;
+  productName!: string;
 
   @Prop({ required: true })
-  price: number;
+  price!: number;
 
   @Prop({ required: true })
-  quantity: number;
+  quantity!: number;
 
   @Prop({ required: true })
-  subtotal: number;
+  subtotal!: number;
 }
 
 const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
@@ -33,24 +33,24 @@ export class Order {
     ref: "User",
     required: true,
   })
-  user: Types.ObjectId;
+  user!: Types.ObjectId;
 
   @Prop({
     type: [OrderItemSchema],
     required: true,
   })
-  items: OrderItem[];
+  items!: OrderItem[];
 
   @Prop({
     required: true,
   })
-  totalPrice: number;
+  totalPrice!: number;
 
   @Prop({
     enum: OrderStatus,
     default: OrderStatus.PENDING,
   })
-  status: OrderStatus;
+  status!: OrderStatus;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

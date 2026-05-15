@@ -8,10 +8,10 @@ export type UserDocument = HydratedDocument<User>;
 })
 export class User {
   @Prop({
-    required: true,
+    required: false,
     trim: true,
   })
-  name: string;
+  name?: string;
 
   @Prop({
     required: true,
@@ -28,8 +28,8 @@ export class User {
 
   @Prop({
     type: String,
-    enum: ['user', 'admin'],
-    default: 'user',
+    enum: ['admin', 'customer', 'staff'],
+    default: 'customer',
   })
   role: string;
 

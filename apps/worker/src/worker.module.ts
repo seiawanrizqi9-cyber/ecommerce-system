@@ -1,37 +1,49 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-
 import { OrderProcessor } from './processors/order.processor';
-import { Order, OrderSchema } from '@app/shared/schemas/order.schema';
+import { Order, OrderSchema, QUEUES } from '@app/shared';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-
-    // 🔥 Guard ENV biar tidak undefined
-    MongooseModule.forRoot(
-      process.env.MONGO_URI ??
-        (() => {
-          throw new Error('MONGO_URI is not defined');
-        })(),
-    ),
-    MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
-
-    // Redis connection
-    BullModule.forRoot({
-      connection: {
-        host: process.env.REDIS_HOST ?? 'localhost',
-        port: Number(process.env.REDIS_PORT ?? 6379),
-      },
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
     }),
 
-    // Queue name HARDCODE biar aman
+    // MongoDB
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGODB_URI'),
+      }),
+    }),
+
+    MongooseModule.forFeature([
+      {
+        name: Order.name,
+        schema: OrderSchema,
+      },
+    ]),
+
+    // Redis
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('REDIS_HOST') ?? 'localhost',
+          port: Number(configService.get<number>('REDIS_PORT') ?? 6379),
+        },
+      }),
+    }),
+
+    // Queue
     BullModule.registerQueue({
-      name: 'order-queue',
+      name: QUEUES.ORDER,
     }),
   ],
+
   providers: [OrderProcessor],
 })
 export class WorkerModule {}

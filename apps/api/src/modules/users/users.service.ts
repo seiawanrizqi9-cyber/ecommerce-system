@@ -11,7 +11,7 @@ export class UsersService {
   ) {}
 
   async findByEmail(email: string) {
-    return this.userModel.findOne({ email });
+    return this.userModel.findOne({ email: email.toLowerCase() }).exec();
   }
 
   async create(data: Partial<User>) {
@@ -19,6 +19,6 @@ export class UsersService {
   }
 
   async findById(id: string) {
-    return this.userModel.findById(id);
+    return this.userModel.findById(id).exec();
   }
 }

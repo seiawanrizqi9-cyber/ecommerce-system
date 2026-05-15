@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
+import { UserDocument } from '../users/schemas/user.schema';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { Role } from './enums/role.enum';
@@ -31,14 +32,14 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    const user = await this.usersService.create({
+    const user = (await this.usersService.create({
       email: dto.email,
       password: hashedPassword,
       role: Role.CUSTOMER,
-    });
+    })) as UserDocument;
 
     const tokens = await this.generateTokens({
-      sub: user.id,
+      sub: String(user._id),
       email: user.email,
       role: user.role as Role,
     });
@@ -47,7 +48,7 @@ export class AuthService {
       message: 'Register success',
 
       user: {
-        id: user.id,
+        id: String(user._id),
         email: user.email,
         role: user.role,
       },
@@ -57,7 +58,9 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.usersService.findByEmail(dto.email);
+    const user = (await this.usersService.findByEmail(
+      dto.email,
+    )) as UserDocument;
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -70,7 +73,7 @@ export class AuthService {
     }
 
     const tokens = await this.generateTokens({
-      sub: user.id,
+      sub: String(user._id),
       email: user.email,
       role: user.role as Role,
     });
@@ -79,7 +82,7 @@ export class AuthService {
       message: 'Login success',
 
       user: {
-        id: user.id,
+        id: String(user._id),
         email: user.email,
         role: user.role,
       },

@@ -1,11 +1,16 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { BullModule } from '@nestjs/bullmq';
+
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
-import { Order, OrderSchema } from '@app/shared';
-import { ProductModule } from '../products/products.module';
-import { BullModule } from '@nestjs/bullmq';
-import { QUEUES } from '@app/shared';
+
+import { Product, ProductSchema } from '../products/schemas/product.schema';
+
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
+import { Order, OrderSchema, QUEUES } from '@app/shared';
+import { OrderQueueService } from './order-queue.service';
 
 @Module({
   imports: [
@@ -14,15 +19,21 @@ import { QUEUES } from '@app/shared';
         name: Order.name,
         schema: OrderSchema,
       },
+      {
+        name: Product.name,
+        schema: ProductSchema,
+      },
     ]),
-
-    ProductModule,
 
     BullModule.registerQueue({
       name: QUEUES.ORDER,
     }),
   ],
+
   controllers: [OrderController],
-  providers: [OrderService],
+
+  providers: [OrderService, JwtAuthGuard, OrderQueueService],
+
+  exports: [OrderQueueService],
 })
 export class OrderModule {}

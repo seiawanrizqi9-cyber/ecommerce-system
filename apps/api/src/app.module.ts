@@ -8,6 +8,7 @@ import { OrderModule } from './modules/order/order.module';
 import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { HealthModule } from './modules/health/health.module';
+import { ProductsModule } from './modules/products/products.module';
 import * as Joi from 'joi';
 import { APP_GUARD } from '@nestjs/core';
 
@@ -50,6 +51,7 @@ import { APP_GUARD } from '@nestjs/core';
 
     AuthModule,
     OrderModule,
+    ProductsModule,
     HealthModule,
   ],
   controllers: [AppController],

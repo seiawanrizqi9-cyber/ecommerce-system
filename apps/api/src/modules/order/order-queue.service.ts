@@ -1,14 +1,11 @@
+import { QUEUES } from '@app/shared';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { Queue } from 'bullmq';
-import { QUEUES } from '@app/shared';
 
 @Injectable()
 export class OrderQueueService {
-  constructor(
-    @InjectQueue(QUEUES.ORDER)
-    private readonly orderQueue: Queue,
-  ) {}
+  constructor(@InjectQueue(QUEUES.ORDER) private readonly orderQueue: Queue) {}
 
   async addCreateOrderJob(data: unknown) {
     await this.orderQueue.add('create-order', data, {

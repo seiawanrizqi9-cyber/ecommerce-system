@@ -3,14 +3,14 @@ import { Job } from 'bullmq';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { Order, OrderDocument, OrderStatus } from '@app/shared';
+import { Order, OrderDocument, OrderStatus, QUEUES } from '@app/shared';
 
 interface CreateOrderJobData {
   orderId: string;
   userId: string;
 }
 
-@Processor('order-queue')
+@Processor(QUEUES.ORDER)
 export class OrderProcessor extends WorkerHost {
   constructor(
     @InjectModel(Order.name)
