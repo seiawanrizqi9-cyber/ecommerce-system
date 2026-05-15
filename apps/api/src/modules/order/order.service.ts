@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
@@ -79,15 +79,27 @@ export class OrderService {
     return this.orderModel.find({ user: userId }).sort({ createdAt: -1 });
   }
 
-  async getOrderDetail(userId: string, orderId: string) {
-    return this.orderModel.findOne({ _id: orderId, user: userId });
+  async getOrderDetail(userId: string, role: string, orderId: string) {
+    const query =
+      role === 'admin' ? { _id: orderId } : { _id: orderId, user: userId };
+    const order = await this.orderModel.findOne(query).exec();
+
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${orderId} not found`);
+    }
+
+    return order;
   }
 
   async updateOrderStatus(orderId: string, status: OrderStatus) {
-    return this.orderModel.findByIdAndUpdate(
-      orderId,
-      { status },
-      { new: true },
-    );
+    const order = await this.orderModel
+      .findByIdAndUpdate(orderId, { status }, { new: true })
+      .exec();
+
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${orderId} not found`);
+    }
+
+    return order;
   }
 }
