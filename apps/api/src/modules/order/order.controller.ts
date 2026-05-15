@@ -98,6 +98,29 @@ export class OrderController {
   @ApiResponse({
     status: 200,
     description: 'Order detail',
+    schema: {
+      example: {
+        success: true,
+        message: 'Request successful',
+        data: {
+          _id: '6821f2d8e9a1b4f3c2a11111',
+          user: '6821f2d8e9a1b4f3c2a00000',
+          items: [
+            {
+              productId: '6821f2d8e9a1b4f3c2a22222',
+              productName: 'Gaming Keyboard',
+              price: 150000,
+              quantity: 1,
+              subtotal: 150000,
+            },
+          ],
+          totalPrice: 150000,
+          status: 'pending',
+          createdAt: '2026-05-15T10:00:00.000Z',
+          updatedAt: '2026-05-15T10:00:00.000Z',
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 404,
@@ -110,7 +133,11 @@ export class OrderController {
     },
     @Param('id') orderId: string,
   ) {
-    return this.orderService.getOrderDetail(req.user.id, orderId);
+    return this.orderService.getOrderDetail(
+      req.user.id,
+      req.user.role,
+      orderId,
+    );
   }
 
   // 🔥 UPDATE ORDER STATUS (ADMIN)
@@ -128,6 +155,17 @@ export class OrderController {
   @ApiResponse({
     status: 200,
     description: 'Order status updated',
+    schema: {
+      example: {
+        success: true,
+        message: 'Request successful',
+        data: {
+          _id: '6821f2d8e9a1b4f3c2a11111',
+          status: 'processing',
+          updatedAt: '2026-05-15T10:05:00.000Z',
+        },
+      },
+    },
   })
   @ApiForbiddenResponse({
     description: 'Forbidden - Admin only',
